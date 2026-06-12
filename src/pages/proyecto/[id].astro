@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import KanbanBoard from '../../components/projects/KanbanBoard';
+import StatusBadge from '../../components/clients/StatusBadge';
+import { formatDate } from '../../lib/format';
+import type { Client } from '../../lib/types';
+
+const { id } = Astro.params;
+const { supabase, user } = Astro.locals;
+
+if (!user || !id) {
+  return Astro.redirect('/login');
+}
+
+const { data: client, error } = await supabase.from('clients').select('*').eq('id', id).single();
+
+if (error || !client) {
+  return Astro.redirect('/clientes/ganados');
+}
+
+const typedClient = client as Client;
+---
+
+<BaseLayout title={typedClient.client_name}>
+  <div class="mb-6">
+    <a
+      href="/clientes/ganados"
+      class="mb-3 inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+    >
+      ← Volver a Clientes ganados
+    </a>
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h1 class="text-lg font-semibold">{typedClient.client_name}</h1>
+        <p class="text-sm text-[var(--text-secondary)]">
+          {typedClient.contact_name || 'Sin contacto'}{typedClient.niche ? ` · ${typedClient.niche}` : ''} · {formatDate(typedClient.date)}
+        </p>
+      </div>
+      <StatusBadge status={typedClient.status} />
+    </div>
+  </div>
+
+  <KanbanBoard client:load clientId={typedClient.id} userId={user.id} />
+</BaseLayout>

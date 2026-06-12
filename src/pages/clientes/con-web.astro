@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ClientsTable from '../../components/clients/ClientsTable';
+---
+
+<BaseLayout title="Con sitio web">
+  <ClientsTable client:load view="con-web" />
+</BaseLayout>

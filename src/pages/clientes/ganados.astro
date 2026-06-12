@@ -1,0 +1,8 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ClientsTable from '../../components/clients/ClientsTable';
+---
+
+<BaseLayout title="Ganados">
+  <ClientsTable client:load view="ganados" />
+</BaseLayout>
