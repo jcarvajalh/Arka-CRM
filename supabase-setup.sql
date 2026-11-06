@@ -22,10 +22,12 @@ create table if not exists clients (
   contact_detail text,
   status text not null default 'Prospecto' check (status in (
     'Prospecto', 'Contactado', 'Respondió', 'Reunión',
-    'Propuesta enviada', 'Negociación', 'Ganado', 'Perdido'
+    'Propuesta enviada', 'Negociación', 'Ganado', 'Finalizado', 'Perdido'
   )),
   date date default current_date,
   niche text,
+  website_url text,
+  social_media text,
 
   -- Flags
   is_high_potential boolean default false,

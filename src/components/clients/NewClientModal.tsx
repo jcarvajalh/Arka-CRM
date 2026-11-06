@@ -33,6 +33,8 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
   const [status, setStatus] = useState<ClientStatus>('Prospecto');
   const [date, setDate] = useState(todayISO());
   const [niche, setNiche] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [socialMedia, setSocialMedia] = useState('');
   const [isHighPotential, setIsHighPotential] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -51,6 +53,8 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
       status,
       date,
       niche: niche.trim() || null,
+      website_url: websiteUrl.trim() || null,
+      social_media: socialMedia.trim() || null,
       is_high_potential: isHighPotential,
       backlog: hasWebsite ? DEFAULT_BACKLOG_WITH_WEBSITE : DEFAULT_BACKLOG_WITHOUT_WEBSITE,
     });
@@ -58,7 +62,8 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
     setSaving(false);
 
     if (error) {
-      showToast('No se pudo crear el cliente.', 'error');
+      console.error('Error al crear cliente:', error);
+      showToast(`No se pudo crear el cliente: ${error.message}`, 'error');
       return;
     }
 
@@ -193,6 +198,26 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
             placeholder="Ej. Odontología, restaurantes…"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Página web</label>
+          <input
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="Ej. https://cliente.com"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Redes sociales</label>
+          <input
+            value={socialMedia}
+            onChange={(e) => setSocialMedia(e.target.value)}
+            placeholder="Ej. @cliente en Instagram"
             className={inputClass}
           />
         </div>

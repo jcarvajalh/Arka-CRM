@@ -8,6 +8,7 @@ export type ClientStatus =
   | 'Propuesta enviada'
   | 'Negociación'
   | 'Ganado'
+  | 'Finalizado'
   | 'Perdido';
 
 export interface BacklogItem {
@@ -27,6 +28,8 @@ export interface Client {
   status: ClientStatus;
   date: string | null;
   niche: string | null;
+  website_url: string | null;
+  social_media: string | null;
   is_high_potential: boolean;
   backlog: BacklogItem[];
   audit_doc_url: string | null;
@@ -62,6 +65,7 @@ export const CLIENT_STATUSES: ClientStatus[] = [
   'Propuesta enviada',
   'Negociación',
   'Ganado',
+  'Finalizado',
   'Perdido',
 ];
 
@@ -75,6 +79,7 @@ export const STATUS_STYLES: Record<ClientStatus, string> = {
   'Propuesta enviada': 'bg-blue-500/20 text-blue-400',
   Negociación: 'bg-green-500/20 text-green-400',
   Ganado: 'bg-green-600/20 text-green-500',
+  Finalizado: 'bg-purple-500/20 text-purple-400',
   Perdido: 'bg-red-500/20 text-red-400',
 };
 

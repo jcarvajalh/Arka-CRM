@@ -1,4 +1,4 @@
-import { Globe, Building2, Trophy, LogOut } from 'lucide-react';
+import { Globe, Building2, Trophy, CheckCircle2, LogOut } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { supabase } from '../../lib/supabase/client';
 
@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { href: '/clientes/con-web', label: 'Clientes con sitio web', icon: Globe },
   { href: '/clientes/sin-web', label: 'Clientes sin sitio web', icon: Building2 },
   { href: '/clientes/ganados', label: 'Clientes Ganados', icon: Trophy },
+  { href: '/clientes/finalizados', label: 'Clientes Finalizados', icon: CheckCircle2 },
 ];
 
 interface Props {

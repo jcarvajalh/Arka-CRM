@@ -1,4 +1,4 @@
-import { Star, ListChecks, Trash2, MessageCircle, Camera, Mail } from 'lucide-react';
+import { Star, ListChecks, Trash2, MessageCircle, Camera, Mail, Pencil } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import FileUpload from './FileUpload';
 import { formatDate } from '../../lib/format';
@@ -22,6 +22,7 @@ interface Props {
   onStatusChange: (client: Client, status: ClientStatus) => void;
   onToggleHighPotential: (client: Client) => void;
   onOpenBacklog: (client: Client) => void;
+  onEdit: (client: Client) => void;
   onDelete: (client: Client) => void;
   onFileUploaded: (clientId: string, field: 'audit_doc_url' | 'proposal_doc_url', path: string) => void;
 }
@@ -32,6 +33,7 @@ export default function ClientRow({
   onStatusChange,
   onToggleHighPotential,
   onOpenBacklog,
+  onEdit,
   onDelete,
   onFileUploaded,
 }: Props) {
@@ -45,7 +47,18 @@ export default function ClientRow({
         client.is_high_potential ? 'border-l-2 border-l-[#006aff]' : 'border-l-2 border-l-transparent'
       }`}
     >
-      <td className="whitespace-nowrap px-4 py-3 font-medium">{client.client_name}</td>
+      <td className="whitespace-nowrap px-4 py-3 font-medium">
+        <div className="group flex items-center gap-2">
+          <span>{client.client_name}</span>
+          <button
+            onClick={() => onEdit(client)}
+            title="Editar cliente"
+            className="rounded-md p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:bg-black/5 hover:text-[#006aff] group-hover:opacity-100 dark:hover:bg-white/5"
+          >
+            <Pencil size={14} />
+          </button>
+        </div>
+      </td>
       <td className="whitespace-nowrap px-4 py-3 text-[var(--text-secondary)]">
         {client.contact_name || '—'}
       </td>

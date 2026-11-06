@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Inbox } from 'lucide-react';
+import { Plus, Inbox, Pencil } from 'lucide-react';
 import ClientRow from './ClientRow';
 import StatusBadge from './StatusBadge';
 import BacklogModal from './BacklogModal';
 import NewClientModal from './NewClientModal';
+import EditClientModal from './EditClientModal';
 import { supabase } from '../../lib/supabase/client';
 import { showToast } from '../../lib/toast';
 import { formatDate } from '../../lib/format';
 import type { Client, ClientStatus } from '../../lib/types';
 
-export type ClientsView = 'con-web' | 'sin-web' | 'ganados';
+export type ClientsView = 'con-web' | 'sin-web' | 'ganados' | 'finalizados';
 
 interface Props {
   view: ClientsView;
@@ -28,13 +29,24 @@ const VIEW_CONFIG: Record<ClientsView, { title: string; emptyMessage: string }> 
     title: 'Clientes ganados',
     emptyMessage: 'Todavía no tienes clientes ganados. Cuando un cliente pase a estado "Ganado" aparecerá aquí.',
   },
+  finalizados: {
+    title: 'Clientes finalizados',
+    emptyMessage: 'Todavía no tienes clientes finalizados. Cuando un cliente pase a estado "Finalizado" aparecerá aquí.',
+  },
 };
 
 const TABLE_COLUMNS = ['Cliente', 'Contacto', 'Canal', 'Medio', 'Estado', 'Fecha', 'Nicho', 'Backlog', 'Acciones'];
 
+const CARD_VIEWS: ClientsView[] = ['ganados', 'finalizados'];
+
 function matchesView(client: Client, view: ClientsView): boolean {
   if (view === 'ganados') return client.status === 'Ganado';
-  return client.has_website === (view === 'con-web') && client.status !== 'Ganado';
+  if (view === 'finalizados') return client.status === 'Finalizado';
+  return (
+    client.has_website === (view === 'con-web') &&
+    client.status !== 'Ganado' &&
+    client.status !== 'Finalizado'
+  );
 }
 
 export default function ClientsTable({ view }: Props) {
@@ -42,6 +54,7 @@ export default function ClientsTable({ view }: Props) {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [backlogClient, setBacklogClient] = useState<Client | null>(null);
+  const [editClient, setEditClient] = useState<Client | null>(null);
   const [newClientOpen, setNewClientOpen] = useState(false);
 
   const fetchClients = useCallback(
@@ -50,8 +63,13 @@ export default function ClientsTable({ view }: Props) {
 
       if (view === 'ganados') {
         query = query.eq('status', 'Ganado');
+      } else if (view === 'finalizados') {
+        query = query.eq('status', 'Finalizado');
       } else {
-        query = query.eq('has_website', view === 'con-web').neq('status', 'Ganado');
+        query = query
+          .eq('has_website', view === 'con-web')
+          .neq('status', 'Ganado')
+          .neq('status', 'Finalizado');
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -112,6 +130,13 @@ export default function ClientsTable({ view }: Props) {
       if (!confirmed) return;
     }
 
+    if (status === 'Finalizado' && client.status !== 'Finalizado') {
+      const confirmed = window.confirm(
+        `¿Marcar a "${client.client_name}" como Finalizado?\nPasará a la vista de Clientes finalizados.`
+      );
+      if (!confirmed) return;
+    }
+
     const { error } = await supabase.from('clients').update({ status }).eq('id', client.id);
 
     if (error) {
@@ -125,6 +150,8 @@ export default function ClientsTable({ view }: Props) {
 
     if (status === 'Ganado') {
       showToast(`"${client.client_name}" se movió a Clientes ganados.`, 'success');
+    } else if (status === 'Finalizado') {
+      showToast(`"${client.client_name}" se movió a Clientes finalizados.`, 'success');
     }
   }
 
@@ -164,6 +191,13 @@ export default function ClientsTable({ view }: Props) {
     setClients((prev) => prev.map((c) => (c.id === backlogClient.id ? { ...c, backlog } : c)));
   }
 
+  function handleClientSaved(updates: Partial<Client>) {
+    if (!editClient) return;
+    setClients((prev) =>
+      prev.map((c) => (c.id === editClient.id ? { ...c, ...updates } : c)).filter((c) => matchesView(c, view))
+    );
+  }
+
   const config = VIEW_CONFIG[view];
 
   return (
@@ -200,7 +234,7 @@ export default function ClientsTable({ view }: Props) {
             Nuevo cliente
           </button>
         </div>
-      ) : view === 'ganados' ? (
+      ) : CARD_VIEWS.includes(view) ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {clients.map((client) => (
             <a
@@ -209,7 +243,20 @@ export default function ClientsTable({ view }: Props) {
               className="flex flex-col gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4 transition-colors hover:border-[#006aff]/50"
             >
               <div className="flex items-start justify-between gap-2">
-                <p className="font-medium">{client.client_name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-medium">{client.client_name}</p>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setEditClient(client);
+                    }}
+                    title="Editar cliente"
+                    className="rounded-md p-1 text-[var(--text-secondary)] transition-colors hover:bg-black/5 hover:text-[#006aff] dark:hover:bg-white/5"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                </div>
                 <StatusBadge status={client.status} />
               </div>
               <p className="text-sm text-[var(--text-secondary)]">{client.contact_name || 'Sin contacto'}</p>
@@ -241,6 +288,7 @@ export default function ClientsTable({ view }: Props) {
                   onStatusChange={handleStatusChange}
                   onToggleHighPotential={handleToggleHighPotential}
                   onOpenBacklog={setBacklogClient}
+                  onEdit={setEditClient}
                   onDelete={handleDelete}
                   onFileUploaded={handleFileUploaded}
                 />
@@ -252,6 +300,14 @@ export default function ClientsTable({ view }: Props) {
 
       {backlogClient && (
         <BacklogModal client={backlogClient} onClose={() => setBacklogClient(null)} onSaved={handleBacklogSaved} />
+      )}
+
+      {editClient && (
+        <EditClientModal
+          client={editClient}
+          onClose={() => setEditClient(null)}
+          onSaved={handleClientSaved}
+        />
       )}
 
       {newClientOpen && userId && (
