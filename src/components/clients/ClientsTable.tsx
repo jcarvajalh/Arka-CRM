@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Plus, Inbox, Pencil } from 'lucide-react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, Inbox, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
 import ClientRow from './ClientRow';
 import StatusBadge from './StatusBadge';
 import BacklogModal from './BacklogModal';
@@ -39,6 +39,38 @@ const TABLE_COLUMNS = ['Cliente', 'Contacto', 'Canal', 'Medio', 'Estado', 'Fecha
 
 const CARD_VIEWS: ClientsView[] = ['ganados', 'finalizados'];
 
+const PAGE_SIZE = 50;
+
+function dayKey(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatGroupDate(key: string): string {
+  const [y, m, d] = key.split('-').map(Number);
+  const label = new Date(y, m - 1, d).toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function groupByCreatedDay(list: Client[]): { key: string; clients: Client[] }[] {
+  const groups: { key: string; clients: Client[] }[] = [];
+  for (const client of list) {
+    const key = dayKey(client.created_at);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.clients.push(client);
+    else groups.push({ key, clients: [client] });
+  }
+  return groups;
+}
+
 function matchesView(client: Client, view: ClientsView): boolean {
   if (view === 'ganados') return client.status === 'Ganado';
   if (view === 'finalizados') return client.status === 'Finalizado';
@@ -56,6 +88,22 @@ export default function ClientsTable({ view }: Props) {
   const [backlogClient, setBacklogClient] = useState<Client | null>(null);
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [newClientOpen, setNewClientOpen] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(clients.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(1);
+  }, [view]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const pageGroups = useMemo(() => {
+    const sorted = [...clients].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return groupByCreatedDay(sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
+  }, [clients, page]);
 
   const fetchClients = useCallback(
     async (uid: string) => {
@@ -280,21 +328,64 @@ export default function ClientsTable({ view }: Props) {
               </tr>
             </thead>
             <tbody>
-              {clients.map((client) => (
-                <ClientRow
-                  key={client.id}
-                  client={client}
-                  userId={userId ?? ''}
-                  onStatusChange={handleStatusChange}
-                  onToggleHighPotential={handleToggleHighPotential}
-                  onOpenBacklog={setBacklogClient}
-                  onEdit={setEditClient}
-                  onDelete={handleDelete}
-                  onFileUploaded={handleFileUploaded}
-                />
+              {pageGroups.map((group) => (
+                <Fragment key={group.key}>
+                  <tr className="border-b border-[var(--border-subtle)] bg-black/[0.03] dark:bg-white/[0.03]">
+                    <td
+                      colSpan={TABLE_COLUMNS.length}
+                      className="px-4 py-2 text-xs font-semibold text-[var(--text-secondary)]"
+                    >
+                      {formatGroupDate(group.key)}
+                      <span className="ml-2 font-normal">
+                        · {group.clients.length} {group.clients.length === 1 ? 'cliente' : 'clientes'}
+                      </span>
+                    </td>
+                  </tr>
+                  {group.clients.map((client) => (
+                    <ClientRow
+                      key={client.id}
+                      client={client}
+                      userId={userId ?? ''}
+                      onStatusChange={handleStatusChange}
+                      onToggleHighPotential={handleToggleHighPotential}
+                      onOpenBacklog={setBacklogClient}
+                      onEdit={setEditClient}
+                      onDelete={handleDelete}
+                      onFileUploaded={handleFileUploaded}
+                    />
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           </table>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+              <span>
+                Mostrando {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, clients.length)} de {clients.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 rounded-md border border-[var(--border-subtle)] px-2 py-1 transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/5"
+                >
+                  <ChevronLeft size={14} />
+                  Anterior
+                </button>
+                <span>
+                  Página {page} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-1 rounded-md border border-[var(--border-subtle)] px-2 py-1 transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/5"
+                >
+                  Siguiente
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
