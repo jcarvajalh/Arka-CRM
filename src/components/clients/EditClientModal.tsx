@@ -154,7 +154,7 @@ export default function EditClientModal({ client, onClose, onSaved }: Props) {
             }`}
           >
             <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+              className={`absolute left-0 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
                 hasWebsite ? 'translate-x-5' : 'translate-x-0.5'
               }`}
             />
