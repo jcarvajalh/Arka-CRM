@@ -1,4 +1,4 @@
-import { Star, ListChecks, Trash2, MessageCircle, Camera, Mail, Pencil } from 'lucide-react';
+import { Star, ListChecks, Trash2, MessageCircle, Camera, Mail, Pencil, FileText } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import FileUpload from './FileUpload';
 import { formatDate } from '../../lib/format';
@@ -15,6 +15,32 @@ const CHANNEL_ICONS: Record<ContactChannel, typeof MessageCircle> = {
   Instagram: Camera,
   Correo: Mail,
 };
+
+function ChannelCell({
+  channel,
+  detail,
+  message,
+}: {
+  channel: ContactChannel | null;
+  detail: string | null;
+  message: string | null;
+}) {
+  if (!channel) return <span className="text-[var(--text-secondary)]">—</span>;
+  const Icon = CHANNEL_ICONS[channel];
+  return (
+    <div className="flex flex-col items-start gap-1" title={message ? `Mensaje enviado:
+${message}` : undefined}>
+      <span
+        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${CHANNEL_STYLES[channel]}`}
+      >
+        <Icon size={12} />
+        {channel}
+        {message && <FileText size={11} className="opacity-70" />}
+      </span>
+      {detail && <span className="whitespace-nowrap text-xs text-[var(--text-secondary)]">{detail}</span>}
+    </div>
+  );
+}
 
 interface Props {
   client: Client;
@@ -37,7 +63,6 @@ export default function ClientRow({
   onDelete,
   onFileUploaded,
 }: Props) {
-  const ChannelIcon = client.contact_channel ? CHANNEL_ICONS[client.contact_channel] : null;
   const completed = client.backlog?.filter((i) => i.checked).length ?? 0;
   const total = client.backlog?.length ?? 0;
 
@@ -62,20 +87,16 @@ export default function ClientRow({
       <td className="whitespace-nowrap px-4 py-3 text-[var(--text-secondary)]">
         {client.contact_name || '—'}
       </td>
-      <td className="whitespace-nowrap px-4 py-3">
-        {client.contact_channel && ChannelIcon ? (
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${CHANNEL_STYLES[client.contact_channel]}`}
-          >
-            <ChannelIcon size={12} />
-            {client.contact_channel}
-          </span>
-        ) : (
-          <span className="text-[var(--text-secondary)]">—</span>
-        )}
+      <td className="whitespace-nowrap px-4 py-3 text-[var(--text-secondary)]">{client.city || '—'}</td>
+      <td className="px-4 py-3">
+        <ChannelCell channel={client.contact_channel} detail={client.contact_detail} message={client.contact_message} />
       </td>
-      <td className="whitespace-nowrap px-4 py-3 text-[var(--text-secondary)]">
-        {client.contact_detail || '—'}
+      <td className="px-4 py-3">
+        <ChannelCell
+          channel={client.contact_channel_2}
+          detail={client.contact_detail_2}
+          message={client.contact_message_2}
+        />
       </td>
       <td className="whitespace-nowrap px-4 py-3">
         <StatusBadge status={client.status} onChange={(status) => onStatusChange(client, status)} />

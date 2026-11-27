@@ -35,7 +35,7 @@ const VIEW_CONFIG: Record<ClientsView, { title: string; emptyMessage: string }> 
   },
 };
 
-const TABLE_COLUMNS = ['Cliente', 'Contacto', 'Canal', 'Medio', 'Estado', 'Fecha', 'Nicho', 'Backlog', 'Acciones'];
+const TABLE_COLUMNS = ['Cliente', 'Contacto', 'Ciudad', 'Primer canal', 'Segundo canal', 'Estado', 'Fecha', 'Nicho', 'Backlog', 'Acciones'];
 
 const CARD_VIEWS: ClientsView[] = ['ganados', 'finalizados'];
 

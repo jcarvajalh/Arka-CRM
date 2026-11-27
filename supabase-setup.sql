@@ -20,8 +20,16 @@ create table if not exists clients (
   contact_name text,
   contact_channel text check (contact_channel in ('WhatsApp', 'Instagram', 'Correo')),
   contact_detail text,
+  contact_message text,
+  contact_channel_2 text check (contact_channel_2 in ('WhatsApp', 'Instagram', 'Correo')),
+  contact_detail_2 text,
+  contact_message_2 text,
+  city text,
   status text not null default 'Prospecto' check (status in (
-    'Prospecto', 'Contactado', 'Respondió', 'Reunión',
+    'Prospecto',
+    'Contactado vía WhatsApp', 'Contactado vía Instagram', 'Contactado vía Correo',
+    'Respondió vía WhatsApp', 'Respondió vía Instagram', 'Respondió vía Correo',
+    'Reunión',
     'Propuesta enviada', 'Negociación', 'Ganado', 'Finalizado', 'Perdido'
   )),
   date date default current_date,

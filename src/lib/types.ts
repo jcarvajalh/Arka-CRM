@@ -2,8 +2,12 @@ export type ContactChannel = 'WhatsApp' | 'Instagram' | 'Correo';
 
 export type ClientStatus =
   | 'Prospecto'
-  | 'Contactado'
-  | 'Respondió'
+  | 'Contactado vía WhatsApp'
+  | 'Contactado vía Instagram'
+  | 'Contactado vía Correo'
+  | 'Respondió vía WhatsApp'
+  | 'Respondió vía Instagram'
+  | 'Respondió vía Correo'
   | 'Reunión'
   | 'Propuesta enviada'
   | 'Negociación'
@@ -25,6 +29,11 @@ export interface Client {
   contact_name: string | null;
   contact_channel: ContactChannel | null;
   contact_detail: string | null;
+  contact_message: string | null;
+  contact_channel_2: ContactChannel | null;
+  contact_detail_2: string | null;
+  contact_message_2: string | null;
+  city: string | null;
   status: ClientStatus;
   date: string | null;
   niche: string | null;
@@ -59,8 +68,12 @@ export interface ProjectTask {
 
 export const CLIENT_STATUSES: ClientStatus[] = [
   'Prospecto',
-  'Contactado',
-  'Respondió',
+  'Contactado vía WhatsApp',
+  'Contactado vía Instagram',
+  'Contactado vía Correo',
+  'Respondió vía WhatsApp',
+  'Respondió vía Instagram',
+  'Respondió vía Correo',
   'Reunión',
   'Propuesta enviada',
   'Negociación',
@@ -73,8 +86,12 @@ export const CONTACT_CHANNELS: ContactChannel[] = ['WhatsApp', 'Instagram', 'Cor
 
 export const STATUS_STYLES: Record<ClientStatus, string> = {
   Prospecto: 'bg-gray-500/20 text-gray-400',
-  Contactado: 'bg-orange-500/20 text-orange-400',
-  Respondió: 'bg-orange-400/20 text-orange-300',
+  'Contactado vía WhatsApp': 'bg-orange-500/20 text-orange-400',
+  'Contactado vía Instagram': 'bg-orange-500/20 text-orange-400',
+  'Contactado vía Correo': 'bg-orange-500/20 text-orange-400',
+  'Respondió vía WhatsApp': 'bg-amber-400/20 text-amber-300',
+  'Respondió vía Instagram': 'bg-amber-400/20 text-amber-300',
+  'Respondió vía Correo': 'bg-amber-400/20 text-amber-300',
   Reunión: 'bg-yellow-500/20 text-yellow-400',
   'Propuesta enviada': 'bg-blue-500/20 text-blue-400',
   Negociación: 'bg-green-500/20 text-green-400',

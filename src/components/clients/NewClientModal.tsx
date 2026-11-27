@@ -1,14 +1,13 @@
 import { useState, type SubmitEvent } from 'react';
 import Modal from '../ui/Modal';
+import ContactChannelFields, { channelToColumns, type ChannelValue } from './ContactChannelFields';
 import { supabase } from '../../lib/supabase/client';
 import { showToast } from '../../lib/toast';
 import {
   CLIENT_STATUSES,
-  CONTACT_CHANNELS,
   DEFAULT_BACKLOG_WITH_WEBSITE,
   DEFAULT_BACKLOG_WITHOUT_WEBSITE,
   type ClientStatus,
-  type ContactChannel,
 } from '../../lib/types';
 
 interface Props {
@@ -27,8 +26,9 @@ const labelClass = 'mb-1.5 block text-xs font-medium uppercase tracking-wider te
 export default function NewClientModal({ userId, defaultHasWebsite, onClose, onCreated }: Props) {
   const [clientName, setClientName] = useState('');
   const [contactName, setContactName] = useState('');
-  const [contactChannel, setContactChannel] = useState<ContactChannel>('WhatsApp');
-  const [contactDetail, setContactDetail] = useState('');
+  const [channel1, setChannel1] = useState<ChannelValue>({ channel: 'WhatsApp', detail: '', message: '' });
+  const [channel2, setChannel2] = useState<ChannelValue>({ channel: '', detail: '', message: '' });
+  const [city, setCity] = useState('');
   const [hasWebsite, setHasWebsite] = useState(defaultHasWebsite);
   const [status, setStatus] = useState<ClientStatus>('Prospecto');
   const [date, setDate] = useState(todayISO());
@@ -47,8 +47,8 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
       user_id: userId,
       client_name: clientName.trim(),
       contact_name: contactName.trim() || null,
-      contact_channel: contactChannel,
-      contact_detail: contactDetail.trim() || null,
+      ...channelToColumns(channel1, channel2),
+      city: city.trim() || null,
       has_website: hasWebsite,
       status,
       date,
@@ -118,31 +118,13 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelClass}>Canal de contacto</label>
-            <select
-              value={contactChannel}
-              onChange={(e) => setContactChannel(e.target.value as ContactChannel)}
-              className={inputClass}
-            >
-              {CONTACT_CHANNELS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className={labelClass}>Medio de contacto</label>
-            <input
-              value={contactDetail}
-              onChange={(e) => setContactDetail(e.target.value)}
-              placeholder="Número o correo"
-              className={inputClass}
-            />
-          </div>
-        </div>
+        <ContactChannelFields title="Primer canal de contacto" value={channel1} onChange={setChannel1} />
+        <ContactChannelFields
+          title="Segundo canal de contacto"
+          value={channel2}
+          onChange={setChannel2}
+          optional
+        />
 
         <div className="flex items-center justify-between rounded-md border border-[var(--border-subtle)] px-3 py-2.5">
           <div>
@@ -190,6 +172,16 @@ export default function NewClientModal({ userId, defaultHasWebsite, onClose, onC
               className={inputClass}
             />
           </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Ciudad</label>
+          <input
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Ej. Bogotá"
+            className={inputClass}
+          />
         </div>
 
         <div>
